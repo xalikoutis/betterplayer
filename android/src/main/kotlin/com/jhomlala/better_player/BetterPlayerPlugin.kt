@@ -248,7 +248,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             }
             "enableCast" -> {
                 val dataSource = dataSources[textureId]
-                val uri = getParameter(dataSource, URI_PARAMETER, "")
+                val uri = getParameter(dataSource, ONLINE_URL_PARAMETER, "")
                 player.enableCast(uri);
                 setupNotification(player)
                 result.success(null);
@@ -310,6 +310,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             val formatHint = getParameter<String?>(dataSource, FORMAT_HINT_PARAMETER, null)
             val licenseUrl = getParameter<String?>(dataSource, LICENSE_URL_PARAMETER, null)
             val clearKey = getParameter<String?>(dataSource, DRM_CLEARKEY_PARAMETER, null)
+            val onlineUrl = getParameter<String?>(dataSource, ONLINE_URL_PARAMETER, null)
             val drmHeaders: Map<String, String> =
                 getParameter(dataSource, DRM_HEADERS_PARAMETER, HashMap())
             player.setDataSource(
@@ -328,7 +329,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 cacheKey,
                 clearKey
             )
-            player.enableCast(uri);
+            player.enableCast(onlineUrl);
 
         }
     }
