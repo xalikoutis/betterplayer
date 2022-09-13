@@ -17,6 +17,9 @@ class BetterPlayerDataSource {
   ///Url of the video
   final String url;
 
+  ///Online Url for cast of the video
+  final String? onlineUrl;
+
   ///Subtitles configuration
   final List<BetterPlayerSubtitlesSource>? subtitles;
 
@@ -79,6 +82,7 @@ class BetterPlayerDataSource {
   BetterPlayerDataSource(
     this.type,
     this.url, {
+    this.onlineUrl,
     this.bytes,
     this.subtitles,
     this.liveStream = false,
@@ -89,8 +93,7 @@ class BetterPlayerDataSource {
     this.asmsTrackNames,
     this.resolutions,
     this.cacheConfiguration,
-    this.notificationConfiguration =
-        const BetterPlayerNotificationConfiguration(
+    this.notificationConfiguration = const BetterPlayerNotificationConfiguration(
       showNotification: false,
     ),
     this.overriddenDuration,
@@ -102,8 +105,7 @@ class BetterPlayerDataSource {
   }) : assert(
             (type == BetterPlayerDataSourceType.network ||
                     type == BetterPlayerDataSourceType.file) ||
-                (type == BetterPlayerDataSourceType.memory &&
-                    bytes?.isNotEmpty == true),
+                (type == BetterPlayerDataSourceType.memory && bytes?.isNotEmpty == true),
             "Url can't be null in network or file data source | bytes can't be null when using memory data source");
 
   ///Factory method to build network data source which uses url as data source
@@ -130,6 +132,7 @@ class BetterPlayerDataSource {
     return BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       url,
+      onlineUrl: url,
       subtitles: subtitles,
       liveStream: liveStream,
       headers: headers,
@@ -151,6 +154,7 @@ class BetterPlayerDataSource {
   ///Bytes parameter is not used in this data source.
   factory BetterPlayerDataSource.file(
     String url, {
+    String? onlineUrl,
     List<BetterPlayerSubtitlesSource>? subtitles,
     bool? useAsmsSubtitles,
     bool? useAsmsTracks,
@@ -163,6 +167,7 @@ class BetterPlayerDataSource {
     return BetterPlayerDataSource(
       BetterPlayerDataSourceType.file,
       url,
+      onlineUrl: onlineUrl,
       subtitles: subtitles,
       useAsmsSubtitles: useAsmsSubtitles,
       useAsmsTracks: useAsmsTracks,
@@ -209,6 +214,7 @@ class BetterPlayerDataSource {
   BetterPlayerDataSource copyWith({
     BetterPlayerDataSourceType? type,
     String? url,
+    String? onlineUrl,
     List<int>? bytes,
     List<BetterPlayerSubtitlesSource>? subtitles,
     bool? liveStream,
@@ -231,6 +237,7 @@ class BetterPlayerDataSource {
     return BetterPlayerDataSource(
       type ?? this.type,
       url ?? this.url,
+      onlineUrl : onlineUrl ?? this.onlineUrl,
       bytes: bytes ?? this.bytes,
       subtitles: subtitles ?? this.subtitles,
       liveStream: liveStream ?? this.liveStream,
@@ -240,15 +247,13 @@ class BetterPlayerDataSource {
       useAsmsAudioTracks: useAsmsAudioTracks ?? this.useAsmsAudioTracks,
       resolutions: resolutions ?? this.resolutions,
       cacheConfiguration: cacheConfiguration ?? this.cacheConfiguration,
-      notificationConfiguration:
-          notificationConfiguration ?? this.notificationConfiguration,
+      notificationConfiguration: notificationConfiguration ?? this.notificationConfiguration,
       overriddenDuration: overriddenDuration ?? this.overriddenDuration,
       videoFormat: videoFormat ?? this.videoFormat,
       videoExtension: videoExtension ?? this.videoExtension,
       drmConfiguration: drmConfiguration ?? this.drmConfiguration,
       placeholder: placeholder ?? this.placeholder,
-      bufferingConfiguration:
-          bufferingConfiguration ?? this.bufferingConfiguration,
+      bufferingConfiguration: bufferingConfiguration ?? this.bufferingConfiguration,
     );
   }
 }

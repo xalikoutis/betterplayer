@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
+import com.google.android.exoplayer2.ext.cast.CastPlayer
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -27,6 +28,10 @@ import io.flutter.view.TextureRegistry
 import java.lang.Exception
 import java.util.HashMap
 
+import com.google.android.gms.cast.framework.CastButtonFactory
+import com.google.android.gms.cast.framework.CastContext
+
+
 /**
  * Android platform implementation of the VideoPlayerPlugin.
  */
@@ -39,6 +44,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    //private var castPlayer: CastPlayer? = null
+    private lateinit var chromeCastFactoryJava: ChromeCastFactoryKotlin
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -60,6 +67,15 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             binding.textureRegistry
         )
         flutterState?.startListening(this)
+
+        chromeCastFactoryJava = ChromeCastFactoryKotlin(binding.getBinaryMessenger());
+        binding
+            .getPlatformViewRegistry()
+            .registerViewFactory(
+                "ChromeCastButton",
+                chromeCastFactoryJava
+            )
+        //castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
     }
 
 
@@ -115,10 +131,12 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                         call.argument(BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
                     )
                 }
+
                 val player = BetterPlayer(
                     flutterState?.applicationContext!!, eventChannel, handle,
                     customDefaultLoadControl, result
                 )
+                //player.setCastPlayer(castPlayer!!)
                 videoPlayers.put(handle.id(), player)
             }
             PRE_CACHE_METHOD -> preCache(call, result)
@@ -140,6 +158,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         }
     }
 
+    //private var castPlayer: BetterPlayer? = null
     private fun onMethodCall(
         call: MethodCall,
         result: MethodChannel.Result,
@@ -168,7 +187,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 result.success(null)
             }
             SEEK_TO_METHOD -> {
-                val location = (call.argument<Any>(LOCATION_PARAMETER) as Number?)!!.toInt()
+                val location = (call.argument<Any>(LOCATION_PARAMETER) as Number?)!!.toLong()
                 player.seekTo(location)
                 result.success(null)
             }
@@ -219,6 +238,25 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             DISPOSE_METHOD -> {
                 dispose(player, textureId)
                 result.success(null)
+            }
+            "startCast" -> {
+               /* castPlayer?.stopCast();
+                castPlayer = player;*/
+
+                player.startCast();
+                result.success(null);
+            }
+            "enableCast" -> {
+                val dataSource = dataSources[textureId]
+                val uri = getParameter(dataSource, URI_PARAMETER, "")
+                player.enableCast(uri);
+                setupNotification(player)
+                result.success(null);
+            }
+            "disableCast" -> {
+                player.disableCast();
+                setupNotification(player)
+                result.success(null);
             }
             else -> result.notImplemented()
         }
@@ -290,6 +328,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 cacheKey,
                 clearKey
             )
+            player.enableCast(uri);
+
         }
     }
 
@@ -350,6 +390,10 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             }
         }
         return null
+    }
+
+    private fun setupCast(betterPlayer: BetterPlayer){
+
     }
 
     private fun setupNotification(betterPlayer: BetterPlayer) {
@@ -513,6 +557,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val DRM_CLEARKEY_PARAMETER = "clearKey"
         private const val MIX_WITH_OTHERS_PARAMETER = "mixWithOthers"
         const val URL_PARAMETER = "url"
+        const val ONLINE_URL_PARAMETER = "onlineUrl"
         const val PRE_CACHE_SIZE_PARAMETER = "preCacheSize"
         const val MAX_CACHE_SIZE_PARAMETER = "maxCacheSize"
         const val MAX_CACHE_FILE_SIZE_PARAMETER = "maxCacheFileSize"
