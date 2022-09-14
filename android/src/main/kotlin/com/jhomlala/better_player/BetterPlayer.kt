@@ -319,7 +319,7 @@ internal class BetterPlayer(
         playerNotificationManager?.apply {
 
             videoplayer?.let {
-                setPlayer(ForwardingPlayer(videoplayer!!))
+                setPlayer(ForwardingPlayer(videoplayer))
                 setUseNextAction(false)
                 setUsePreviousAction(false)
                 setUseStopAction(false)
@@ -361,7 +361,7 @@ internal class BetterPlayer(
         exoPlayerEventListener?.let { exoPlayerEventListener ->
             videoplayer?.addListener(exoPlayerEventListener)
         }
-        videoplayer?.seekTo(0)
+        //videoplayer?.seekTo(0)
     }
 
     fun disposeRemoteNotifications() {
@@ -851,6 +851,10 @@ internal class BetterPlayer(
 
     fun stopCast() {
         castPlayer?.setSessionAvailabilityListener(null)
+    }
+
+    fun isCasting(): Boolean {
+        return (castPlayer?.isCastSessionAvailable ?: false)
     }
 
     fun enableCast(uri: String?) {

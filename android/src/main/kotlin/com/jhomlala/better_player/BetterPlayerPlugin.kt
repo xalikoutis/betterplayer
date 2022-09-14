@@ -40,11 +40,11 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private val dataSources = LongSparseArray<Map<String, Any?>>()
     private var flutterState: FlutterState? = null
     private var currentNotificationTextureId: Long = -1
+    private var currentCasting: Boolean = false
     private var currentNotificationDataSource: Map<String, Any?>? = null
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
-    //private var castPlayer: CastPlayer? = null
     private lateinit var chromeCastFactoryJava: ChromeCastFactoryKotlin
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
@@ -68,14 +68,13 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         )
         flutterState?.startListening(this)
 
-        chromeCastFactoryJava = ChromeCastFactoryKotlin(binding.getBinaryMessenger());
+        chromeCastFactoryJava = ChromeCastFactoryKotlin(binding.binaryMessenger);
         binding
-            .getPlatformViewRegistry()
+            .platformViewRegistry
             .registerViewFactory(
                 "ChromeCastButton",
                 chromeCastFactoryJava
             )
-        //castPlayer = CastPlayer(CastContext.getSharedInstance()!!)
     }
 
 
@@ -240,9 +239,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 result.success(null)
             }
             "startCast" -> {
-               /* castPlayer?.stopCast();
-                castPlayer = player;*/
-
                 player.startCast();
                 result.success(null);
             }
@@ -403,9 +399,16 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             if (textureId != null) {
                 val dataSource = dataSources[textureId]
                 //Don't setup notification for the same source.
-                if (textureId == currentNotificationTextureId && currentNotificationDataSource != null && dataSource != null && currentNotificationDataSource === dataSource) {
+                if (textureId == currentNotificationTextureId
+                    && currentNotificationDataSource != null
+                    && dataSource != null
+                    && currentNotificationDataSource === dataSource && betterPlayer.isCasting() && currentCasting) {
                     return
                 }
+                if(betterPlayer.isCasting() != currentCasting){
+                    currentCasting = betterPlayer.isCasting()
+                }
+
                 currentNotificationDataSource = dataSource
                 currentNotificationTextureId = textureId
                 removeOtherNotificationListeners()
